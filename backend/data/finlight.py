@@ -18,7 +18,13 @@ def on_message(ws, message):
     global finlight_buffer
     try:
         data = json.loads(message)
-        articles = data if isinstance(data, list) else [data]
+        if data.get("action") == "admit":
+            log.info("Finlight admitted with leaseId: %s" % data.get("leaseId"))
+            return
+        if data.get("action") == "sendArticle":
+            articles = [data.get("data", {})]
+        else:
+            articles = data if isinstance(data, list) else [data]
         for article in articles:
             title = (article.get("title") or "").strip()
             if not title:
@@ -60,6 +66,8 @@ def on_close(ws, close_status_code, close_msg):
 
 def on_open(ws):
     log.info("Finlight WebSocket connected - live stream active!")
+    import json as _json
+    ws.send(_json.dumps({"type": "subscribe", "query": "war OR military OR conflict OR attack OR iran OR ukraine OR russia OR israel OR missile OR sanctions"}))
 
 def start_finlight_stream():
     if not FINLIGHT_KEY:
