@@ -17,6 +17,7 @@ from data.gdelt_cloud import fetch_gdelt_cloud
 from data.newsdata import fetch_newsdata
 from data.strategic import get_strategic_locations
 from data.history import record_snapshot, get_history
+from data.prediction import generate_prediction
 from data.ioda import fetch_internet_outages
 from data.weather import fetch_weather_alerts
 from data.aircraft import fetch_aircraft
@@ -85,9 +86,14 @@ def polling_loop():
                 "sources_online":   len([f for f in feed if f]),
                 "brief":            brief,
                 "brief_updated":    brief_updated,
+                "prediction":       state.get("prediction"),
             })
 
             record_snapshot(score, state["active_incidents"], feed)
+            if brief_interval >= 10 or state["prediction"] is None:
+                prediction = generate_prediction(feed, score, incidents + quakes)
+                if prediction:
+                    state["prediction"] = prediction
             socketio.emit("state_update", {
                 "incidents":        incidents,
                 "earthquakes":      quakes,
@@ -97,6 +103,7 @@ def polling_loop():
                 "active_incidents": state["active_incidents"],
                 "brief":            brief,
                 "brief_updated":    brief_updated,
+                "prediction":       state.get("prediction"),
             })
             log.info(f"Update pushed — score={score}, incidents={len(incidents)}, aircraft={len(aircraft)}, feed={len(feed)}")
 
@@ -132,6 +139,10 @@ def score():
 @app.route("/api/aircraft")
 def aircraft():
     return jsonify(state["aircraft"])
+
+@app.route('/api/prediction')
+def prediction():
+    return jsonify({"prediction": state.get("prediction"), "updated": state.get("brief_updated")})
 
 @app.route('/api/weather')
 def weather():
