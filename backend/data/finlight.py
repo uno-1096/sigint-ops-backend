@@ -66,8 +66,7 @@ def start_finlight_stream():
         return
     try:
         ws = websocket.WebSocketApp(
-            "wss://wss.finlight.me/raw",
-            header={"X-API-KEY": FINLIGHT_KEY},
+            "wss://wss.finlight.me/raw?apiKey=" + FINLIGHT_KEY,
             on_open=on_open,
             on_message=on_message,
             on_error=on_error,
