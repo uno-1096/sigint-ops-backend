@@ -12,6 +12,9 @@ from data.scoring import calculate_escalation_score
 from data.brief import generate_daily_brief
 from data.clustering import cluster_stories
 from data.newsapi import fetch_newsapi
+from data.guardian import fetch_guardian
+from data.gdelt_cloud import fetch_gdelt_cloud
+from data.newsdata import fetch_newsdata
 from data.strategic import get_strategic_locations
 from data.history import record_snapshot, get_history
 from data.ioda import fetch_internet_outages
@@ -50,7 +53,10 @@ def polling_loop():
             quakes     = fetch_earthquakes()
             feed       = fetch_rss_feeds()
             newsapi    = fetch_newsapi()
-            feed       = cluster_stories(feed + newsapi)
+            guardian   = fetch_guardian()
+            newsdata   = fetch_newsdata()
+            gdelt_cloud = fetch_gdelt_cloud()
+            feed       = cluster_stories(feed + newsapi + guardian + newsdata + gdelt_cloud)
             aircraft   = fetch_aircraft()
             outages    = fetch_internet_outages()
             weather    = fetch_weather_alerts()
