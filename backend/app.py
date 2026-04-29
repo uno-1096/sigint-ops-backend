@@ -14,6 +14,7 @@ from data.clustering import cluster_stories
 from data.newsapi import fetch_newsapi
 from data.guardian import fetch_guardian
 from data.gdelt_cloud import fetch_gdelt_cloud
+from data.finlight import fetch_finlight, start_finlight_stream
 from data.newsdata import fetch_newsdata
 from data.strategic import get_strategic_locations
 from data.history import record_snapshot, get_history
@@ -24,6 +25,9 @@ from data.aircraft import fetch_aircraft
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
+
+# Start Finlight real-time stream
+start_finlight_stream()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "sigint-ops-secret"
@@ -57,7 +61,8 @@ def polling_loop():
             guardian   = fetch_guardian()
             newsdata   = fetch_newsdata()
             gdelt_cloud = fetch_gdelt_cloud()
-            feed       = cluster_stories(feed + newsapi + guardian + newsdata + gdelt_cloud)
+            finlight   = fetch_finlight()
+            feed       = cluster_stories(feed + newsapi + guardian + newsdata + gdelt_cloud + finlight)
             aircraft   = fetch_aircraft()
             outages    = fetch_internet_outages()
             weather    = fetch_weather_alerts()
