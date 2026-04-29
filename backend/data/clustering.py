@@ -1,10 +1,9 @@
-
 from difflib import SequenceMatcher
 
 def similarity(a, b):
     return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
-def cluster_stories(items, threshold=0.45):
+def cluster_stories(items, threshold=0.65):
     """Group similar headlines together and add coverage count"""
     clusters = []
     used = set()
@@ -24,16 +23,21 @@ def cluster_stories(items, threshold=0.45):
 
     result = []
     for cluster in clusters:
-        primary = cluster[0]
-        if len(cluster) > 1:
-            sources = list(set(c["source"] for c in cluster))
-            primary = dict(primary)
-            primary["coverage_count"] = len(cluster)
-            primary["coverage_sources"] = sources[:5]
-        else:
-            primary = dict(primary)
-            primary["coverage_count"] = 1
-            primary["coverage_sources"] = [primary["source"]]
+        # Pick primary — prefer LIVE tag, then highest severity
+        def score(item):
+            s = 0
+            if 'LIVE' in item.get('tags', []): s += 100
+            if item.get('severity') == 'critical': s += 10
+            if item.get('severity') == 'elevated': s += 5
+            return s
+        cluster.sort(key=score, reverse=True)
+        primary = dict(cluster[0])
+        sources = list(set(c["source"] for c in cluster))
+        primary["coverage_count"] = len(cluster)
+        primary["coverage_sources"] = sources[:5]
         result.append(primary)
 
+    # Sort by severity
+    priority = {"critical": 0, "elevated": 1, "monitor": 2}
+    result.sort(key=lambda x: priority.get(x.get("severity"), 2))
     return result

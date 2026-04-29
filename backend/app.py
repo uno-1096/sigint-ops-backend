@@ -47,6 +47,9 @@ state = {
 }
 
 brief_interval = 0  # generate brief every 10 polls (~10 min)
+guardian_interval = 0
+newsdata_interval = 0
+gdelt_cloud_interval = 0
 
 def polling_loop():
     global brief_interval
@@ -58,9 +61,18 @@ def polling_loop():
             quakes     = fetch_earthquakes()
             feed       = fetch_rss_feeds()
             newsapi    = fetch_newsapi()
-            guardian   = fetch_guardian()
-            newsdata   = fetch_newsdata()
-            gdelt_cloud = fetch_gdelt_cloud()
+            global guardian_interval, newsdata_interval, gdelt_cloud_interval
+            guardian_interval += 1
+            gdelt_cloud_interval += 1
+            newsdata_interval += 1
+
+            guardian    = fetch_guardian() if guardian_interval >= 3 else []
+            newsdata    = fetch_newsdata() if newsdata_interval >= 3 else []
+            gdelt_cloud = fetch_gdelt_cloud() if gdelt_cloud_interval >= 3 else []
+
+            if guardian_interval >= 3: guardian_interval = 0
+            if newsdata_interval >= 3: newsdata_interval = 0
+            if gdelt_cloud_interval >= 3: gdelt_cloud_interval = 0
             finlight   = fetch_finlight()
             feed       = cluster_stories(feed + newsapi + guardian + newsdata + gdelt_cloud + finlight)
             aircraft   = fetch_aircraft()
@@ -102,7 +114,7 @@ def polling_loop():
             socketio.emit("state_update", {
                 "incidents":        incidents,
                 "earthquakes":      quakes,
-                "feed_items":       feed[:30],
+                "feed_items":       feed[:100],
                 "aircraft":         aircraft,
                 "escalation_score": score,
                 "active_incidents": state["active_incidents"],
@@ -131,7 +143,7 @@ def earthquakes():
 
 @app.route("/api/feed")
 def feed():
-    return jsonify(state["feed_items"][:30])
+    return jsonify(state["feed_items"][:100])
 
 @app.route("/api/score")
 def score():
@@ -144,6 +156,12 @@ def score():
 @app.route("/api/aircraft")
 def aircraft():
     return jsonify(state["aircraft"])
+
+@app.route('/api/debug/finlight')
+def debug_finlight():
+    from data.finlight import fetch_finlight
+    items = fetch_finlight()
+    return jsonify({"count": len(items), "items": items[:3]})
 
 @app.route('/api/prediction')
 def prediction():
@@ -178,7 +196,7 @@ def on_connect():
     socketio.emit("state_update", {
         "incidents":        state["incidents"],
         "earthquakes":      state["earthquakes"],
-        "feed_items":       state["feed_items"][:30],
+        "feed_items":       state["feed_items"][:100],
         "aircraft":         state["aircraft"],
         "escalation_score": state["escalation_score"],
         "active_incidents": state["active_incidents"],
