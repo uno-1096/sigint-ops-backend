@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+import requests
+from flask import Flask, jsonify, request
 from datetime import datetime, timezone
 from flask_socketio import SocketIO
 from flask_cors import CORS
@@ -19,6 +20,7 @@ from data.newsdata import fetch_newsdata
 from data.strategic import get_strategic_locations
 from data.history import record_snapshot, get_history
 from data.prediction import generate_prediction
+from data.satellite import get_satellite_image_url, get_satellite_image
 from data.ioda import fetch_internet_outages
 from data.weather import fetch_weather_alerts
 from data.aircraft import fetch_aircraft
@@ -162,6 +164,18 @@ def debug_finlight():
     from data.finlight import fetch_finlight
     items = fetch_finlight()
     return jsonify({"count": len(items), "items": items[:3]})
+
+@app.route('/api/satellite')
+def satellite():
+    from flask import Response
+    lat = request.args.get('lat', type=float)
+    lon = request.args.get('lon', type=float)
+    if not lat or not lon:
+        return jsonify({"error": "lat and lon required"}), 400
+    img_data, mime = get_satellite_image(lat, lon)
+    if not img_data:
+        return jsonify({"error": "Failed to fetch imagery"}), 500
+    return Response(img_data, mimetype=mime)
 
 @app.route('/api/prediction')
 def prediction():
