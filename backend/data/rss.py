@@ -148,7 +148,13 @@ def fetch_rss_feeds():
         futures = {ex.submit(fetch_one, f): f for f in FEEDS}
         for future in as_completed(futures):
             all_items.extend(future.result())
-    priority = {"critical": 0, "elevated": 1, "monitor": 2}
-    all_items.sort(key=lambda x: priority.get(x["severity"], 2))
+    def parse_pub(item):
+        from email.utils import parsedate_to_datetime
+        try:
+            return parsedate_to_datetime(item.get("published", ""))
+        except:
+            from datetime import datetime, timezone
+            return datetime.min.replace(tzinfo=timezone.utc)
+    all_items.sort(key=parse_pub, reverse=True)
     log.info(f"RSS: fetched {len(all_items)} items from {len(FEEDS)} sources")
     return all_items
