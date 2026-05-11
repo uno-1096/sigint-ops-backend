@@ -43,6 +43,15 @@ FEEDS = [
     {"source": "Middle East Eye","url": "https://www.middleeasteye.net/rss",               "category": "news"},
     {"source": "Kyiv Independent","url": "https://kyivindependent.com/feed/",             "category": "news"},
     {"source": "Euromaidan",   "url": "https://euromaidanpress.com/feed/",                 "category": "news"},
+    {"source": "Reuters Breaking", "url": "https://feeds.reuters.com/reuters/topNews", "category": "news"},
+    {"source": "BBC Breaking",  "url": "https://feeds.bbci.co.uk/news/rss.xml",        "category": "news"},
+    {"source": "Sky News",      "url": "https://feeds.skynews.com/feeds/rss/world.xml","category": "news"},
+    {"source": "ABC News",      "url": "https://feeds.abcnews.com/abcnews/internationalheadlines", "category": "news"},
+    {"source": "NBC News",      "url": "https://feeds.nbcnews.com/nbcnews/public/world","category": "news"},
+    {"source": "CNN",           "url": "http://rss.cnn.com/rss/edition_world.rss",     "category": "news"},
+    {"source": "Politico",      "url": "https://www.politico.com/rss/politicopicks.xml","category": "political"},
+    {"source": "Defense One",   "url": "https://www.defenseone.com/rss/all/",          "category": "military"},
+    {"source": "War on Rocks",  "url": "https://warontherocks.com/feed/",              "category": "military"},
 ]
 
 MILITARY_KW  = ["military","troops","airstrike","missile","strike","naval","warship","combat","weapon","bomb","explosion","rocket","drone","idf","irgc","pentagon","nato","forces"]
@@ -102,7 +111,7 @@ def fetch_one(feed_def):
     items = []
     try:
         parsed = feedparser.parse(feed_def["url"])
-        for entry in parsed.entries[:5]:
+        for entry in parsed.entries[:10]:
             title   = entry.get("title", "").strip()
             summary = entry.get("summary", "").strip()[:200]
             link    = entry.get("link", "")

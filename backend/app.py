@@ -116,7 +116,7 @@ def polling_loop():
             socketio.emit("state_update", {
                 "incidents":        incidents,
                 "earthquakes":      quakes,
-                "feed_items":       feed[:100],
+                "feed_items":       feed[:200],
                 "aircraft":         aircraft,
                 "escalation_score": score,
                 "active_incidents": state["active_incidents"],
@@ -145,7 +145,7 @@ def earthquakes():
 
 @app.route("/api/feed")
 def feed():
-    return jsonify(state["feed_items"][:100])
+    return jsonify(state["feed_items"][:200])
 
 @app.route("/api/score")
 def score():
@@ -210,7 +210,7 @@ def on_connect():
     socketio.emit("state_update", {
         "incidents":        state["incidents"],
         "earthquakes":      state["earthquakes"],
-        "feed_items":       state["feed_items"][:100],
+        "feed_items":       state["feed_items"][:200],
         "aircraft":         state["aircraft"],
         "escalation_score": state["escalation_score"],
         "active_incidents": state["active_incidents"],
